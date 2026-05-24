@@ -21,8 +21,13 @@ model User {
   avatarUrl String?  @db.VarChar(255)
   role      UserRole @default(CUSTOMER)
 
+  // Controle de Confirmação de E-mail
+  isEmailConfirmed         Boolean   @default(false)
+  verificationToken        String?   @unique @db.VarChar(255)
+  verificationTokenExpires DateTime? @db.Timestamp(6)
+
   createdAt DateTime @default(now()) @db.Timestamp(6)
-  updatedAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
 }
 
 enum UserRole {

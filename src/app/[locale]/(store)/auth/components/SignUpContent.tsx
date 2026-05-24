@@ -1,4 +1,5 @@
 "use client";
+
 import { Field, FieldGroup } from "@/components/ui/field";
 
 import FormInput from "./FormInput";
@@ -48,6 +49,12 @@ const SignUpContent = () => {
               <FormInput
                 label={t("Form.passwordLabel")}
                 name="password"
+                type="password"
+                control={form.control}
+              />
+              <FormInput
+                label={t("Form.confirmPasswordLabel")}
+                name="confirmPassword"
                 type="password"
                 control={form.control}
               />

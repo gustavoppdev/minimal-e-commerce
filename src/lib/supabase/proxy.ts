@@ -1,14 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Atualiza a sessão do Supabase no middleware.
+ *
+ * Esta função deve ser chamada no início de cada request para garantir que
+ * os cookies de sessão (access_token + refresh_token) sejam renovados antes
+ * de qualquer Server Component ou Server Action tentar ler o usuário.
+ *
+ * Sem isso, a sessão expira e o usuário é deslogado aleatoriamente.
+ */
 export async function updateSession(
   request: NextRequest,
   response: NextResponse = NextResponse.next({ request }),
 ) {
   let supabaseResponse = response;
 
-  // With Fluid compute, don't put this client in a global environment
-  // variable. Always create a new one on each request.
+  // IMPORTANTE: Não coloque nenhum código entre createServerClient e
+  // supabase.auth.getUser(). Qualquer coisa aqui pode causar bugs sutis
+  // de sessão onde o usuário é deslogado de forma inesperada.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -18,15 +28,20 @@ export async function updateSession(
           return request.cookies.getAll();
         },
         setAll(cookiesToSet, headers) {
+          // 1. Atualiza os cookies no request (para Server Components lerem neste ciclo)
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+
+          // 2. Cria uma nova response com os cookies atualizados
+          supabaseResponse = NextResponse.next({ request });
+
+          // 3. Propaga os cookies com as opções corretas (HttpOnly, SameSite, etc.)
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           );
+
+          // 4. Propaga quaisquer headers adicionais (ex: Set-Cookie do Supabase)
           Object.entries(headers).forEach(([key, value]) =>
             supabaseResponse.headers.set(key, value),
           );
@@ -35,29 +50,25 @@ export async function updateSession(
     },
   );
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getClaims(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // Renova a sessão — este await é obrigatório para que os cookies expirados
+  // sejam atualizados antes da resposta ser enviada ao navegador.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // IMPORTANT: If you remove getClaims() and you use server-side rendering
-  // with the Supabase client, your users may be randomly logged out.
-  // const { data } = await supabase.auth.getClaims();
+  // Regras de redirecionamento
 
-  // const user = data?.claims;
+  const url = request.nextUrl.clone();
 
-  // Extrair o locale atual da URL se houver, para preservar no redirecionamento
-  // const pathname = request.nextUrl.pathname;
-  // const isAuthRoute = pathname.includes("/login") || pathname.includes("/register");
-
-  // if (!user && !isAuthRoute) {
-  // no user, potentially respond by redirecting the user to the login page
-  // const url = request.nextUrl.clone();
-  // Preserva o locale se existir no início do path (ex: /pt/login)
-  // const localeMatch = pathname.match(/^\/([a-z]{2})\//);
-  // const localePrefix = localeMatch ? `/${localeMatch[1]}` : "";
-  // url.pathname = `${localePrefix}/login`;
-  // return NextResponse.redirect(url);
-  // }
+  // Se usuário estiver logado e tentar acessar página de autenticação
+  if (
+    user &&
+    url.pathname.includes("/auth/") &&
+    !url.pathname.includes("/auth/callback")
+  ) {
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }

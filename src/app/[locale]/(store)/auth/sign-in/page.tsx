@@ -1,13 +1,16 @@
 import DynamicBreadcrumb from "@/components/DynamicBreadcrumb";
+import { useTranslations } from "next-intl";
 import SignInContent from "../components/SignInContent";
 
-const breadcrumbItems = [
-  { label: "Início", href: "/" },
-  { label: "Autenticação", href: "/auth/sign-in" },
-  { label: "Login" },
-];
-
 const SignInPage = () => {
+  const t = useTranslations("Auth.SignIn");
+
+  const breadcrumbItems = [
+    { label: t("breadcrumb.home"), href: "/" },
+    { label: t("breadcrumb.auth"), href: "/auth/sign-in" },
+    { label: t("breadcrumb.signIn") },
+  ];
+
   return (
     <div className="">
       <div className="py-6 border-b text-center">Simulando hero</div>

@@ -3,39 +3,44 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
+import { z } from "zod";
 
-export function useAuthForm(type: "sign-in" | "sign-up") {
-  const t = useTranslations("Auth.Errors");
-  const tServer = useTranslations("Auth.Errors.Server");
-  const [serverError, setServerError] = useState<string | null>(null);
+// ---------------------------------------------------------------------------
+// Schemas Zod de validação
+// ---------------------------------------------------------------------------
 
-  const formSchema = z
+/**
+ * Schema de login (sign-in): apenas e-mail e senha.
+ */
+function buildSignInSchema(t: ReturnType<typeof useTranslations<"Auth.Errors">>) {
+  return z.object({
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .min(1, { message: t("emailRequired") })
+      .max(255, { message: t("maxLengthEmail") })
+      .pipe(z.email({ message: t("invalidEmail") })),
+    password: z.string().min(1, { message: t("passwordRequired") }),
+  });
+}
+
+/**
+ * Schema de cadastro (sign-up): estende o de login com nome, confirmação de
+ * senha e validação cruzada.
+ */
+function buildSignUpSchema(t: ReturnType<typeof useTranslations<"Auth.Errors">>) {
+  const nameField = z
+    .string()
+    .trim()
+    .min(2, { message: t("minLengthName") })
+    .max(100, { message: t("maxLengthName") })
+    .regex(/^[\p{Letter}\s'-]+$/u, { message: t("invalidNameCharacters") });
+
+  return z
     .object({
-      firstName:
-        type === "sign-up"
-          ? z
-              .string()
-              .trim()
-              .min(2, { message: t("minLengthName") })
-              .max(100, { message: t("maxLengthName") })
-              .regex(/^[\p{Letter}\s'-]+$/u, {
-                message: t("invalidNameCharacters"),
-              })
-          : z.string().optional(),
-
-      lastName:
-        type === "sign-up"
-          ? z
-              .string()
-              .trim()
-              .min(2, { message: t("minLengthName") })
-              .max(100, { message: t("maxLengthName") })
-              .regex(/^[\p{Letter}\s'-]+$/u, {
-                message: t("invalidNameCharacters"),
-              })
-          : z.string().optional(),
-
+      firstName: nameField,
+      lastName: nameField,
       email: z
         .string()
         .trim()
@@ -43,7 +48,6 @@ export function useAuthForm(type: "sign-in" | "sign-up") {
         .min(1, { message: t("emailRequired") })
         .max(255, { message: t("maxLengthEmail") })
         .pipe(z.email({ message: t("invalidEmail") })),
-
       password: z
         .string()
         .min(6, { message: t("passwordTooShort") })
@@ -51,54 +55,53 @@ export function useAuthForm(type: "sign-in" | "sign-up") {
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/, {
           message: t("passwordComplexity"),
         }),
-
-      confirmPassword:
-        type === "sign-up"
-          ? z.string().min(1, { message: t("confirmPasswordRequired") })
-          : z.string().optional(),
-
-      marketing: z.boolean().optional(),
+      confirmPassword: z
+        .string()
+        .min(1, { message: t("confirmPasswordRequired") }),
     })
-    .superRefine((data, ctx) => {
-      if (type === "sign-up") {
-        if (!data.firstName || data.firstName.length < 2) {
-          ctx.addIssue({
-            code: "custom",
-            message: t("firstNameRequired"),
-            path: ["firstName"],
-          });
-        }
-
-        if (!data.lastName || data.lastName.length < 2) {
-          ctx.addIssue({
-            code: "custom",
-            message: t("lastNameRequired"),
-            path: ["lastName"],
-          });
-        }
-
-        // Comparação de senhas (somente no cadastro)
-        if (data.password !== data.confirmPassword) {
-          ctx.addIssue({
-            code: "custom",
-            message: t("passwordsDoNotMatch"),
-            path: ["confirmPassword"],
-          });
-        }
-      }
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwordsDoNotMatch"),
+      path: ["confirmPassword"],
     });
+}
 
-  type FormValues = z.infer<typeof formSchema>;
+// ---------------------------------------------------------------------------
+// Tipo unificado dos campos do formulário
+// Usamos o super-conjunto (sign-up) para cobrir ambos os casos no useForm.
+// Os campos opcionais (firstName, etc.) simplesmente não são exibidos no sign-in.
+// ---------------------------------------------------------------------------
+type FormValues = {
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
+};
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+export function useAuthForm(type: "sign-in" | "sign-up") {
+  const t = useTranslations("Auth.Errors");
+  const tServer = useTranslations("Auth.Errors.Server");
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  // Seleciona o schema correto de acordo com o tipo de formulário
+  const formSchema =
+    type === "sign-up" ? buildSignUpSchema(t) : buildSignInSchema(t);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    // O cast "as any" é necessário porque zodResolver infere tipos diferentes
+    // para signInSchema vs signUpSchema (refine muda o tipo interno do Zod).
+    // Na prática, o resolver usa o schema passado, então a validação é correta.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(formSchema as any),
     defaultValues: {
       firstName: "",
       lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
-      marketing: false,
     },
   });
 
@@ -117,30 +120,35 @@ export function useAuthForm(type: "sign-in" | "sign-up") {
           })
         : await signIn({ email: data.email, password: data.password });
 
-    // Se a action retornou (ao invés de fazer redirect),
-    // significa que houve erro
+    // Se a action retornou (em vez de redirecionar), ocorreu um erro
     if (result?.error) {
-      let errorMessage = tServer("default");
-
-      switch (result.error) {
-        case "invalid_credentials":
-          errorMessage = tServer("invalid_credentials");
-          break;
-        case "user_already_exists":
-        case "email_exists":
-          errorMessage = tServer("user_already_exists");
-          break;
-        case "over_email_send_rate_limit":
-          errorMessage = tServer("over_email_send_rate_limit");
-          break;
-        case "weak_password":
-          errorMessage = tServer("weak_password");
-          break;
-      }
-
+      const errorMessage = resolveServerError(result.error, tServer);
       setServerError(errorMessage);
     }
   };
 
   return { form, onSubmit, serverError, isSubmitting };
+}
+
+// ---------------------------------------------------------------------------
+// Helper de mapeamento de erros do servidor
+// ---------------------------------------------------------------------------
+
+// Mapeamento de códigos de erro do Supabase para as chaves de tradução
+const SERVER_ERROR_MAP: Record<string, string> = {
+  invalid_credentials: "invalid_credentials",
+  user_already_exists: "user_already_exists",
+  email_exists: "user_already_exists",
+  over_email_send_rate_limit: "over_email_send_rate_limit",
+  weak_password: "weak_password",
+};
+
+function resolveServerError(
+  code: string,
+  tServer: ReturnType<typeof useTranslations<"Auth.Errors.Server">>,
+): string {
+  const key = SERVER_ERROR_MAP[code];
+  // O cast é necessário pois o mapeamento é dinâmico (string → chave válida do namespace)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return key ? tServer(key as any) : tServer("default");
 }

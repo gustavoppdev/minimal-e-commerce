@@ -11,9 +11,15 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 // Theme Provider
 import { ThemeProvider } from "@/components/theme-provider";
 
+// Auth Provider
+import { AuthProvider } from "@/providers/auth-provider";
+import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
+
 // Utils & CSS
 import { cn } from "@/lib/utils";
 import "./globals.css";
+import { EmailVerificationBanner } from "@/components/layout/navbar/EmailVerificationBanner";
 
 const lato = Lato({
   variable: "--font-sans",
@@ -66,9 +72,26 @@ type Props = {
 
 export default async function RootLayout({ children, params }: Props) {
   const { locale } = await params;
+
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+
+  // Busca o usuário logado de forma segura no servidor
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Verifica no Prisma se o e-mail do usuário logado já foi confirmado
+  let dbUser = null;
+  if (user) {
+    dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, email: true, isEmailConfirmed: true },
+    });
+  }
+
+  const showBanner = dbUser && !dbUser.isEmailConfirmed;
+
   return (
     <html
       lang={locale}
@@ -83,15 +106,20 @@ export default async function RootLayout({ children, params }: Props) {
     >
       <NextIntlClientProvider>
         <body className="min-h-full flex flex-col">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            forcedTheme="light"
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+          {showBanner && dbUser && (
+            <EmailVerificationBanner userId={dbUser.id} userEmail={dbUser.email} />
+          )}
+          <AuthProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem={false}
+              forcedTheme="light"
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </AuthProvider>
         </body>
       </NextIntlClientProvider>
     </html>

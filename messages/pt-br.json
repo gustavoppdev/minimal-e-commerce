@@ -3,18 +3,29 @@
     "SignIn": {
       "title": "Faça login na sua conta",
       "description": "Já tem uma conta? Faça login e tenha uma experiência completa.",
-      "submitBtn": "Entrar"
+      "submitBtn": "Entrar",
+      "breadcrumb": {
+        "home": "Início",
+        "auth": "Autenticação",
+        "signIn": "Entrar"
+      }
     },
     "SignUp": {
       "title": "Crie sua conta",
       "description": "Registre sua conta para um processo de checkout mais rápido.",
-      "submitBtn": "Criar conta"
+      "submitBtn": "Criar conta",
+      "breadcrumb": {
+        "home": "Início",
+        "auth": "Autenticação",
+        "signUp": "Cadastro"
+      }
     },
     "Form": {
       "firstNameLabel": "Nome",
       "lastNameLabel": "Sobrenome",
       "emailLabel": "Email",
       "passwordLabel": "Senha",
+      "confirmPasswordLabel": "Confirmar senha",
       "forgotPassword": "Esqueceu a senha?",
       "orReturnToStore": "Ou volte para a loja",
       "showPasswordAlt": "Mostrar senha",
@@ -35,6 +46,7 @@
       "passwordComplexity": "A senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número.",
       "passwordsDoNotMatch": "As senhas não coincidem.",
       "confirmPasswordRequired": "Por favor, confirme sua senha.",
+      "passwordRequired": "A senha é obrigatória.",
       "Server": {
         "invalid_credentials": "E-mail ou senha inválidos.",
         "user_already_exists": "Um usuário com este e-mail já existe.",
