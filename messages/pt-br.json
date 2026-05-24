@@ -1,5 +1,59 @@
 {
-  "HomePage": {
-    "title": "Oi, mundo!"
+  "Auth": {
+    "SignIn": {
+      "title": "Faça login na sua conta",
+      "description": "Já tem uma conta? Faça login e tenha uma experiência completa.",
+      "submitBtn": "Entrar",
+      "breadcrumb": {
+        "home": "Início",
+        "auth": "Autenticação",
+        "signIn": "Entrar"
+      }
+    },
+    "SignUp": {
+      "title": "Crie sua conta",
+      "description": "Registre sua conta para um processo de checkout mais rápido.",
+      "submitBtn": "Criar conta",
+      "breadcrumb": {
+        "home": "Início",
+        "auth": "Autenticação",
+        "signUp": "Cadastro"
+      }
+    },
+    "Form": {
+      "firstNameLabel": "Nome",
+      "lastNameLabel": "Sobrenome",
+      "emailLabel": "Email",
+      "passwordLabel": "Senha",
+      "confirmPasswordLabel": "Confirmar senha",
+      "forgotPassword": "Esqueceu a senha?",
+      "orReturnToStore": "Ou volte para a loja",
+      "showPasswordAlt": "Mostrar senha",
+      "hidePasswordAlt": "Ocultar senha"
+    },
+    "Errors": {
+      "minLengthName": "O nome deve ter pelo menos 2 caracteres.",
+      "maxLengthName": "O nome deve ter no máximo 100 caracteres.",
+      "invalidNameCharacters": "O nome pode conter apenas letras, espaços, hifens e apóstrofos.",
+      "emailRequired": "O e-mail é obrigatório.",
+      "nameRequired": "O nome é obrigatório.",
+      "firstNameRequired": "O nome é obrigatório.",
+      "lastNameRequired": "O sobrenome é obrigatório.",
+      "maxLengthEmail": "O e-mail deve ter no máximo 255 caracteres.",
+      "invalidEmail": "Por favor, insira um endereço de e-mail válido.",
+      "passwordTooShort": "A senha deve ter pelo menos 6 caracteres.",
+      "passwordTooLong": "A senha deve ter no máximo 100 caracteres.",
+      "passwordComplexity": "A senha deve conter pelo menos uma letra maiúscula, uma minúscula e um número.",
+      "passwordsDoNotMatch": "As senhas não coincidem.",
+      "confirmPasswordRequired": "Por favor, confirme sua senha.",
+      "passwordRequired": "A senha é obrigatória.",
+      "Server": {
+        "invalid_credentials": "E-mail ou senha inválidos.",
+        "user_already_exists": "Um usuário com este e-mail já existe.",
+        "over_email_send_rate_limit": "Muitas solicitações. Por favor, tente novamente mais tarde.",
+        "weak_password": "A senha é muito fraca.",
+        "default": "Ocorreu um erro inesperado. Por favor, tente novamente."
+      }
+    }
   }
 }

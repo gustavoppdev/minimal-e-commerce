@@ -1,5 +1,59 @@
 {
-    "HomePage": {
-        "title": "Hello world!"
+  "Auth": {
+    "SignIn": {
+      "title": "Login to your account",
+      "description": "Already have an account? Sign in and enjoy a complete experience.",
+      "submitBtn": "Sign In",
+      "breadcrumb": {
+        "home": "Home",
+        "auth": "Authentication",
+        "signIn": "Sign In"
+      }
+    },
+    "SignUp": {
+      "title": "Create new account",
+      "description": "Register your account for a faster checkout process.",
+      "submitBtn": "Create account",
+      "breadcrumb": {
+        "home": "Home",
+        "auth": "Authentication",
+        "signUp": "Sign Up"
+      }
+    },
+    "Form": {
+      "firstNameLabel": "First Name",
+      "lastNameLabel": "Last Name",
+      "emailLabel": "Email Address",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm password",
+      "forgotPassword": "Forgot password?",
+      "orReturnToStore": "or return to the store",
+      "showPasswordAlt": "Show password",
+      "hidePasswordAlt": "Hide password"
+    },
+    "Errors": {
+      "minLengthName": "Name must be at least 2 characters.",
+      "maxLengthName": "Name must be at most 100 characters.",
+      "invalidNameCharacters": "Name can only contain letters, spaces, hyphens, and apostrophes.",
+      "emailRequired": "Email is required.",
+      "nameRequired": "Name is required.",
+      "firstNameRequired": "First name is required.",
+      "lastNameRequired": "Last name is required.",
+      "maxLengthEmail": "Email must be at most 255 characters.",
+      "invalidEmail": "Please enter a valid email address.",
+      "passwordTooShort": "Password must be at least 6 characters.",
+      "passwordTooLong": "Password must be at most 100 characters.",
+      "passwordComplexity": "Password must include at least one uppercase letter, one lowercase letter, and one number.",
+      "passwordsDoNotMatch": "Passwords do not match.",
+      "confirmPasswordRequired": "Please confirm your password.",
+      "passwordRequired": "Password is required.",
+      "Server": {
+        "invalid_credentials": "Invalid email or password.",
+        "user_already_exists": "A user with this email already exists.",
+        "over_email_send_rate_limit": "Too many requests. Please try again later.",
+        "weak_password": "Password is too weak.",
+        "default": "An unexpected error occurred. Please try again."
+      }
     }
+  }
 }
